@@ -5,15 +5,21 @@ import { config } from '../../../config/env.js';
 import { logger } from '../../../utils/logger.js';
 
 const createStore = () => {
-  // If in test mode, memory store is preferable
-  if (config.NODE_ENV === 'test') {
+  // If in test mode or Redis is unavailable, memory store is preferable
+  if (config.NODE_ENV === 'test' || redis.status !== 'ready') {
     return undefined;
   }
 
   try {
     return new RedisStore({
-      // @ts-expect-error RedisStore sendCommand typing
-      sendCommand: (...args: string[]) => redis.call(...args),
+      sendCommand: async (...args: string[]) => {
+        if (redis.status !== 'ready') return undefined;
+        try {
+          return await (redis as any).call(...args);
+        } catch {
+          return undefined;
+        }
+      },
       prefix: 'rl:auth:',
     });
   } catch (error) {

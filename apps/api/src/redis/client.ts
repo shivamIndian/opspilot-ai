@@ -21,11 +21,12 @@ export const getSanitizedRedisUrl = (url: string): string => {
  */
 export const redis = new Redis(config.REDIS_URL, {
   connectTimeout: config.REDIS_CONNECT_TIMEOUT_MS,
-  maxRetriesPerRequest: null, // Required by BullMQ in future modules
+  maxRetriesPerRequest: 1,
+  enableOfflineQueue: false,
   enableReadyCheck: true,
   lazyConnect: true, // Connect explicitly or on-demand
   retryStrategy(times) {
-    // Exponential backoff with 2000ms max jitter
+    if (times > 3) return null; // Stop reconnection attempts if Redis is unavailable
     const delay = Math.min(times * 200, 2000);
     logger.debug(`Redis reconnection attempt #${times} in ${delay}ms`);
     return delay;

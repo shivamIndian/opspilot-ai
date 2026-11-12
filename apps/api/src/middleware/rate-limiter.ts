@@ -5,14 +5,20 @@ import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 const createRedisStore = (prefix: string) => {
-  if (config.NODE_ENV === 'test') {
-    return undefined; // In-memory store for isolated tests
+  if (config.NODE_ENV === 'test' || redis.status !== 'ready') {
+    return undefined; // In-memory store for isolated tests or when Redis is not connected
   }
 
   try {
     return new RedisStore({
-      // @ts-expect-error RedisStore sendCommand typing
-      sendCommand: (...args: string[]) => redis.call(...args),
+      sendCommand: async (...args: string[]) => {
+        if (redis.status !== 'ready') return undefined;
+        try {
+          return await (redis as any).call(...args);
+        } catch {
+          return undefined;
+        }
+      },
       prefix: `rl:${prefix}:`,
     });
   } catch (error) {
