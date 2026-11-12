@@ -3,17 +3,18 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy root and workspace manifests for efficient caching
-COPY package*.json ./
-COPY apps/api/package*.json ./apps/api/
+# Copy package manifests
+COPY package.json ./
 
-RUN npm ci --workspace=@opspilot/api --include-workspace-root
+# Install dependencies including TypeScript compiler
+RUN npm install
 
 # Copy source code and configuration
-COPY apps/api/ ./apps/api/
+COPY tsconfig.json ./
+COPY src/ ./src/
 
 # Compile TypeScript
-RUN npm run build --workspace=@opspilot/api
+RUN npm run build
 
 # Stage 2: Production Runtime
 FROM node:22-alpine AS runner
@@ -27,25 +28,24 @@ ENV PORT=4000
 RUN apk add --no-cache wget
 
 # Copy package manifests for production install
-COPY package*.json ./
-COPY apps/api/package*.json ./apps/api/
+COPY package.json ./
 
 # Install only production dependencies
-RUN npm ci --workspace=@opspilot/api --omit=dev --include-workspace-root && \
-    npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy compiled JavaScript output and migration artifacts from builder
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/src/database/migrations ./apps/api/dist/database/migrations
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src/database/migrations ./dist/database/migrations
 
-# Set correct file ownership for unprivileged node user
-RUN chown -R node:node /app
-
+# Secure container by dropping root privileges
 USER node
 
+# Expose internal API listening port
 EXPOSE 4000
 
+# Container healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:4000/health/live || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:4000/api/v1/health || exit 1
 
-CMD ["node", "apps/api/dist/server.js"]
+# Execute production server entrypoint
+CMD ["node", "dist/server.js"]
