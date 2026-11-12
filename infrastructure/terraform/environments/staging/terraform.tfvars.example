@@ -1,0 +1,18 @@
+# Example Terraform Variables for Staging Environment
+# Copy to terraform.tfvars and populate with actual non-secret staging parameters
+
+environment = "staging"
+aws_region  = "us-east-1"
+
+# ECR Container Image Tags (Pushed from GitHub Actions)
+api_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/opspilot-api:sha-a1b2c3d"
+ai_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/opspilot-ai-service:sha-a1b2c3d"
+
+# GitHub OIDC Trust
+github_repo          = "my-organization/opspilot-ai"
+create_oidc_provider = true
+
+# Optional Custom Domain Settings (leave null if using default ALB / CloudFront URLs)
+# frontend_domain          = "staging.opspilot.com"
+# frontend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+# api_certificate_arn      = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"

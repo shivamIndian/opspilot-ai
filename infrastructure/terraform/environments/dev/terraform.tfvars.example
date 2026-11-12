@@ -1,0 +1,5 @@
+# Example Dev Terraform Variables
+aws_region = "us-east-1"
+api_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/opspilot-api:dev-latest"
+ai_image   = "123456789012.dkr.ecr.us-east-1.amazonaws.com/opspilot-ai-service:dev-latest"
+github_repo = "organization/opspilot-ai"

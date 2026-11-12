@@ -1,0 +1,27 @@
+# Example Production Terraform Variables
+# DO NOT COMMIT REAL PRODUCTION CREDENTIALS OR KEYS TO SOURCE CONTROL
+
+environment = "production"
+aws_region  = "us-east-1"
+
+# Production ECR Image ARNs
+api_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/opspilot-api:v1.0.0"
+ai_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/opspilot-ai-service:v1.0.0"
+
+# Initial secret placeholder (immediately update via AWS Secrets Manager)
+openai_api_key = "REPLACE_WITH_REAL_OPENAI_KEY_IN_SECRETS_MANAGER"
+
+# GitHub OIDC Deployment Federation
+github_repo          = "organization/opspilot-ai"
+create_oidc_provider = false # Set false if OIDC provider already exists in account
+
+# Custom Domain & TLS Certificates
+frontend_domain          = "app.opspilot.com"
+frontend_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+api_certificate_arn      = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+
+# Sizing & Capacity
+rds_instance_class = "db.m6g.large"
+redis_node_type    = "cache.m6g.large"
+api_desired_count  = 2
+ai_desired_count   = 2

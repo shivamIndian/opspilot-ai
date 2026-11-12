@@ -1,0 +1,9 @@
+<user_query>
+{query}
+</user_query>
+
+<retrieved_context>
+{context}
+</retrieved_context>
+
+Synthesize a clear, factual answer grounded strictly in the verified sources provided above. Return a structured response complying with the required schema. Ensure every supporting source ID (e.g. S1, S2) is recorded in cited_source_ids.

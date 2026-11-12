@@ -1,0 +1,68 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
+        },
+        primary: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
+        },
+        enterprise: {
+          bg: '#080D19',
+          surface: '#0F172A',
+          secondary: '#111C31',
+          elevated: '#172338',
+          border: '#273449',
+          borderStrong: '#3A4A63',
+          ring: '#818CF8',
+          textPrimary: '#F8FAFC',
+          textSecondary: '#CBD5E1',
+          textMuted: '#94A3B8',
+          indigo: '#6366F1',
+          indigoHover: '#4F46E5',
+          violet: '#8B5CF6',
+        },
+      },
+      fontFamily: {
+        sans: [
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          'sans-serif',
+        ],
+      },
+      boxShadow: {
+        glow: '0 0 20px -5px rgba(99, 102, 241, 0.15)',
+        'glow-lg': '0 0 35px -5px rgba(99, 102, 241, 0.25)',
+      },
+    },
+  },
+  plugins: [],
+};

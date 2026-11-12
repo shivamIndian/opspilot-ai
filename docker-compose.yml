@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: opspilot-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-opspilot_db}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-opspilot_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-change_this_local_password}
+      API_DB_USER: ${API_DB_USER:-opspilot_api}
+      API_DB_PASSWORD: ${API_DB_PASSWORD:-change_this_api_password}
+      AI_DB_USER: ${AI_DB_USER:-opspilot_ai}
+      AI_DB_PASSWORD: ${AI_DB_PASSWORD:-change_this_ai_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-opspilot_admin} -d ${POSTGRES_DB:-opspilot_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: opspilot-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-change_this_redis_password}
+      --appendonly yes
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-change_this_redis_password} ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  postgres_data:
+    name: opspilot_postgres_data
+  redis_data:
+    name: opspilot_redis_data

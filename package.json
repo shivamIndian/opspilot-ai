@@ -1,0 +1,49 @@
+{
+  "name": "opspilot-ai",
+  "version": "0.1.0",
+  "description": "OpsPilot AI - Enterprise Agentic AI Support Platform Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:status": "docker compose ps",
+    "infra:logs": "docker compose logs -f",
+    "db:init:local": "tsx scripts/init-local-db.ts",
+    "db:migrate": "npm run db:migrate --workspace=@opspilot/api && uv run --project apps/ai-service alembic -c apps/ai-service/alembic.ini upgrade head",
+    "db:rollback": "npm run db:rollback --workspace=@opspilot/api && uv run --project apps/ai-service alembic -c apps/ai-service/alembic.ini downgrade -1",
+    "db:status": "npm run db:status --workspace=@opspilot/api",
+    "dev:web": "npm run dev --workspace=@opspilot/web",
+    "dev:api": "npm run dev --workspace=@opspilot/api",
+    "dev:worker": "npm run worker:dev --workspace=@opspilot/api",
+    "start:worker": "npm run worker:start --workspace=@opspilot/api",
+    "dev:worker:embedding": "npm run worker:embedding:dev --workspace=@opspilot/api",
+    "start:worker:embedding": "npm run worker:embedding:start --workspace=@opspilot/api",
+    "dev:ai": "uv run --project apps/ai-service uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"WEB,API,AI,WORKER\" -c \"cyan.bold,green.bold,magenta.bold,yellow.bold\" \"npm run dev:web\" \"npm run dev:api\" \"npm run dev:ai\" \"npm run dev:worker\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present && uv run --project apps/ai-service pytest apps/ai-service/tests",
+    "test:web": "npm run test --workspace=@opspilot/web",
+    "test:api": "npm run test --workspace=@opspilot/api",
+    "test:ai": "uv run --project apps/ai-service pytest apps/ai-service/tests",
+    "test:contracts": "npm run test --workspace=@opspilot/api -- tests/api-contracts.test.ts",
+    "test:e2e": "npm run test --workspace=@opspilot/api -- tests/e2e-workflow.test.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

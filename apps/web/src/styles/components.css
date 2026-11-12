@@ -1,0 +1,46 @@
+/* Common Design System Utility Component Styles */
+
+@layer components {
+  .app-surface {
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+  }
+
+  .app-surface-secondary {
+    background-color: var(--bg-surface-secondary);
+    border-color: var(--border-subtle);
+  }
+
+  .app-surface-elevated {
+    background-color: var(--bg-surface-elevated);
+    border-color: var(--border-subtle);
+  }
+
+  .app-surface-hover:hover {
+    background-color: var(--bg-surface-hover);
+  }
+
+  .app-surface-active:active {
+    background-color: var(--bg-surface-active);
+  }
+
+  .app-border {
+    border-color: var(--border-subtle);
+  }
+
+  .app-border-strong {
+    border-color: var(--border-strong);
+  }
+
+  .app-text-muted {
+    color: var(--text-muted);
+  }
+
+  .app-text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .app-text-primary {
+    color: var(--text-primary);
+  }
+}
