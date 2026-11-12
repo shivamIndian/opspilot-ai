@@ -41,10 +41,7 @@ export const errorHandler = (
     success: false,
     error: {
       code: 'INTERNAL_SERVER_ERROR',
-      message:
-        process.env.NODE_ENV === 'production'
-          ? 'An unexpected internal error occurred'
-          : err.message || 'Internal server error',
+      message: err.message || 'An unexpected internal error occurred',
     },
   });
 };
