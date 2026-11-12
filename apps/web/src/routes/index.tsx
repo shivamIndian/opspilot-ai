@@ -82,6 +82,33 @@ const AIEvaluationPage = lazy(() => import('@/features/ai-evaluation').then(m =>
 const EvaluationRunDetailPage = lazy(() => import('@/features/ai-evaluation').then(m => ({ default: m.EvaluationRunDetailPage })));
 
 export const router = createBrowserRouter([
+  // Dedicated Full-Screen Auth Pages (Self-contained AuthLayout with dedicated branding & theme)
+  {
+    element: <PublicRoute />,
+    children: [
+      {
+        path: 'login',
+        element: <LoginPage />,
+      },
+      {
+        path: 'register',
+        element: <RegisterPage />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: 'reset-password',
+        element: <ResetPasswordPage />,
+      },
+    ],
+  },
+  {
+    path: 'verify-email',
+    element: <VerifyEmailPage />,
+  },
+
   // Public Pages (using marketing / standard RootLayout)
   {
     path: '/',
@@ -90,31 +117,6 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
-      },
-      {
-        element: <PublicRoute />,
-        children: [
-          {
-            path: 'login',
-            element: <LoginPage />,
-          },
-          {
-            path: 'register',
-            element: <RegisterPage />,
-          },
-          {
-            path: 'forgot-password',
-            element: <ForgotPasswordPage />,
-          },
-          {
-            path: 'reset-password',
-            element: <ResetPasswordPage />,
-          },
-        ],
-      },
-      {
-        path: 'verify-email',
-        element: <VerifyEmailPage />,
       },
       {
         path: 'invitations/accept',

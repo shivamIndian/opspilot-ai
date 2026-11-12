@@ -12,6 +12,16 @@ import { globalApiLimiter } from './middleware/rate-limiter.js';
 export const createApp = (): Application => {
   const app = express();
 
+  // Extract clean origin from config.FRONTEND_URL
+  const getFrontendOrigin = () => {
+    try {
+      return new URL(config.FRONTEND_URL).origin;
+    } catch {
+      return config.FRONTEND_URL;
+    }
+  };
+  const configuredOrigin = getFrontendOrigin();
+
   // 1. Enterprise Security Headers (Helmet + Custom CSP)
   app.use(
     helmet({
@@ -21,7 +31,7 @@ export const createApp = (): Application => {
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'", config.FRONTEND_URL],
+          connectSrc: ["'self'", configuredOrigin, config.FRONTEND_URL, 'https://*.vercel.app'],
           fontSrc: ["'self'", 'https:'],
           objectSrc: ["'none'"],
           mediaSrc: ["'self'"],
@@ -35,10 +45,26 @@ export const createApp = (): Application => {
     })
   );
 
-  // 2. Strict CORS Configuration
+  // 2. Strict CORS Configuration with Dynamic Vercel and Localhost Support
   app.use(
     cors({
-      origin: [config.FRONTEND_URL],
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, or vercel rewrite proxy)
+        if (!origin) return callback(null, true);
+
+        const normalized = origin.trim();
+        if (
+          normalized === configuredOrigin ||
+          normalized === config.FRONTEND_URL ||
+          normalized.endsWith('.vercel.app') ||
+          normalized.includes('localhost') ||
+          normalized.includes('127.0.0.1')
+        ) {
+          return callback(null, true);
+        }
+
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+      },
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: [
         'Content-Type',

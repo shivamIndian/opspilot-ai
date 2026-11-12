@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios';
 import type { ApiResponse } from '@/types';
 import type { AuthResponseData } from '@/types/auth';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
