@@ -17,11 +17,17 @@ export const getSanitizedDatabaseUrl = (url: string): string => {
   }
 };
 
+const isCloudOrProduction =
+  config.NODE_ENV === 'production' ||
+  config.DATABASE_URL.includes('supabase.co') ||
+  config.DATABASE_URL.includes('sslmode=require');
+
 export const pool = new Pool({
   connectionString: config.DATABASE_URL,
   max: config.DATABASE_POOL_MAX,
   idleTimeoutMillis: config.DATABASE_IDLE_TIMEOUT_MS,
   connectionTimeoutMillis: config.DATABASE_CONNECTION_TIMEOUT_MS,
+  ssl: isCloudOrProduction ? { rejectUnauthorized: false } : false,
 });
 
 // Pool Lifecycle & Event Listeners

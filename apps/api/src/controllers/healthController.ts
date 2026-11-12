@@ -28,7 +28,7 @@ export const getReadiness = async (
 
   const isDbUp = dbResult.status === 'up';
   const isRedisUp = redisResult.status === 'up';
-  const isAllReady = isDbUp && isRedisUp;
+  const isAllReady = isDbUp; // Database is primary requirement; Redis operates with in-memory fallback
 
   const responseBody: ReadinessResponse = {
     success: isAllReady,
