@@ -36,6 +36,7 @@ const standardLimiterOptions: Partial<Options> = {
   max: config.NODE_ENV === 'test' ? 1000 : 15, // limit requests per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   handler: (_req, res) => {
     res.status(429).json({
       success: false,

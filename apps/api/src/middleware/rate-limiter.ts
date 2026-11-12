@@ -41,6 +41,7 @@ const createLimiter = (options: {
     max: config.NODE_ENV === 'test' ? 1000 : options.max,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: false,
     store: createRedisStore(options.prefix),
     handler: (_req, res) => {
       res.status(429).json({

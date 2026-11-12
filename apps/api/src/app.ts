@@ -12,6 +12,9 @@ import { globalApiLimiter } from './middleware/rate-limiter.js';
 export const createApp = (): Application => {
   const app = express();
 
+  // Trust first proxy hop (Render / Cloudflare / Vercel edge reverse proxy)
+  app.set('trust proxy', 1);
+
   // Extract clean origin from config.FRONTEND_URL
   const getFrontendOrigin = () => {
     try {
