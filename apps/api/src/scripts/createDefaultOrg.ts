@@ -1,4 +1,4 @@
-import { pool, closePool } from '../database/index.js';
+import { closePool } from '../database/index.js';
 import { organizationService } from '../modules/organizations/services/organization.service.js';
 import { userRepository } from '../modules/auth/repositories/user.repository.js';
 import { logger } from '../utils/logger.js';
