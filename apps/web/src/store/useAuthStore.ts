@@ -25,6 +25,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
     getAccessToken: () => get().accessToken,
     getCsrfToken: () => get().csrfToken,
     onAuthFailure: () => {
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.removeItem('opspilot_csrf_token');
+        } catch {}
+      }
       set({
         user: null,
         accessToken: null,
@@ -34,6 +39,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
       });
     },
     onAuthRefreshSuccess: (data: AuthResponseData) => {
+      if (data.csrfToken && typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('opspilot_csrf_token', data.csrfToken);
+        } catch {}
+      }
       set({
         accessToken: data.accessToken,
         csrfToken: data.csrfToken,
@@ -50,6 +60,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
     isLoading: true, // starts loading while initializing
 
     setAuth: (data: AuthResponseData) => {
+      if (data.csrfToken && typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('opspilot_csrf_token', data.csrfToken);
+        } catch {}
+      }
       set({
         user: data.user || get().user,
         accessToken: data.accessToken,
@@ -64,6 +79,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     clearAuth: () => {
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.removeItem('opspilot_csrf_token');
+        } catch {}
+      }
       set({
         user: null,
         accessToken: null,
@@ -82,8 +102,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
     initAuth: async () => {
       set({ isLoading: true });
       try {
-        // Attempt silent refresh using HttpOnly cookie
-        const refreshData = await authService.refresh(get().csrfToken);
+        const cachedCsrf =
+          get().csrfToken ||
+          (typeof localStorage !== 'undefined'
+            ? localStorage.getItem('opspilot_csrf_token')
+            : null);
+        // Attempt silent refresh using HttpOnly cookie + CSRF synchronizer token
+        const refreshData = await authService.refresh(cachedCsrf);
+        if (refreshData.csrfToken && typeof localStorage !== 'undefined') {
+          try {
+            localStorage.setItem('opspilot_csrf_token', refreshData.csrfToken);
+          } catch {}
+        }
         set({
           accessToken: refreshData.accessToken,
           csrfToken: refreshData.csrfToken,
@@ -98,6 +128,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
         });
       } catch {
         // No valid session cookie found -> safe unauthenticated state
+        if (typeof localStorage !== 'undefined') {
+          try {
+            localStorage.removeItem('opspilot_csrf_token');
+          } catch {}
+        }
         set({
           user: null,
           accessToken: null,

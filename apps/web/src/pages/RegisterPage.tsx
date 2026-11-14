@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { authService } from '@/services/authService';
 import { UserPlus, User, Mail, CheckCircle2 } from 'lucide-react';
 import {
@@ -18,6 +18,8 @@ import { Checkbox } from '@/components/ui/Checkbox';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const RegisterPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -134,7 +136,10 @@ export const RegisterPage: React.FC = () => {
             </p>
 
             <div className="pt-4">
-              <Link to="/login" state={{ email }}>
+              <Link
+                to={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'}
+                state={{ email }}
+              >
                 <Button variant="primary" size="md" className="w-full">
                   Proceed to Sign In
                 </Button>

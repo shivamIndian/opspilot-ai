@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganizationStore } from '@/store/useOrganizationStore';
 import { organizationService } from '@/services/organizationService';
 import type { OrganizationInvitation } from '@/types/organization';
 import {
@@ -20,7 +21,9 @@ import {
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, logout, logoutAll } = useAuth();
+  const { fetchOrganizations } = useOrganizationStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<Array<OrganizationInvitation & { organizationName: string }>>([]);
@@ -37,7 +40,9 @@ export const DashboardPage: React.FC = () => {
     setIsAcceptingId(invitationId);
     try {
       const res = await organizationService.acceptInvitationDirect(invitationId);
-      window.location.href = `/organizations/${res.organization.id}`;
+      setPendingInvitations(prev => prev.filter(i => i.id !== invitationId));
+      await fetchOrganizations();
+      navigate(`/organizations/${res.organization.id}`);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error

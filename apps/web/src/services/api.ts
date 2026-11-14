@@ -26,6 +26,22 @@ let onAuthRefreshSuccess: (data: AuthResponseData) => void = () => {};
 export const getClientCsrfToken = (): string | null => {
   const inMemory = getCsrfToken();
   if (inMemory) return inMemory;
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const local = localStorage.getItem('opspilot_csrf_token');
+      if (local) return local;
+    } catch {
+      // safe fallback if storage access restricted
+    }
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      const session = sessionStorage.getItem('opspilot_csrf_token');
+      if (session) return session;
+    } catch {
+      // safe fallback
+    }
+  }
   if (typeof document !== 'undefined') {
     const match = document.cookie.match(/(?:^|;\s*)opspilot_csrf_token=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;

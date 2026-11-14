@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { organizationService } from '@/services/organizationService';
+import { useOrganizationStore } from '@/store/useOrganizationStore';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Building2,
@@ -16,6 +17,7 @@ export const AcceptInvitationPage: React.FC = () => {
   const token = searchParams.get('token');
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { fetchOrganizations } = useOrganizationStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [successData, setSuccessData] = useState<{
@@ -41,6 +43,7 @@ export const AcceptInvitationPage: React.FC = () => {
         orgId: result.organization.id,
         role: result.role,
       });
+      fetchOrganizations().catch(() => {});
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
@@ -99,26 +102,6 @@ export const AcceptInvitationPage: React.FC = () => {
                 Register
               </Link>
             </div>
-          </div>
-        ) : !user?.emailVerified ? (
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs space-y-3 text-left">
-            <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
-              <div>
-                <p className="font-semibold text-amber-200">Email Verification Required</p>
-                <p className="text-[11px] text-amber-300/90 mt-1 leading-relaxed">
-                  Your account email ({user?.email}) is not yet verified. For security reasons,
-                  invitations can only be accepted after email verification.
-                </p>
-              </div>
-            </div>
-            <Link
-              to="/verify-email"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 hover:text-white"
-            >
-              <span>Go to Email Verification</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
         ) : successData ? (
           <div className="space-y-6">

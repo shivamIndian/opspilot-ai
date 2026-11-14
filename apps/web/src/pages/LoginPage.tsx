@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/authService';
 import { LogIn, Mail } from 'lucide-react';
@@ -19,6 +19,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { setAuth } = useAuth();
 
   const initialEmail = (location.state as { email?: string })?.email || '';
@@ -30,7 +31,11 @@ export const LoginPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+  const redirectParam = searchParams.get('redirect');
+  const from =
+    redirectParam ||
+    (location.state as { from?: { pathname: string } })?.from?.pathname ||
+    '/dashboard';
 
   const validate = (): boolean => {
     const errors: { email?: string; password?: string } = {};

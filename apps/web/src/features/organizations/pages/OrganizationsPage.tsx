@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { organizationService } from '@/services/organizationService';
 import type { OrganizationInvitation } from '@/types/organization';
@@ -7,6 +7,7 @@ import { OrganizationCard } from '../components/OrganizationCard';
 import { Building2, Plus, Loader2, Mail, CheckCircle2 } from 'lucide-react';
 
 export const OrganizationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { organizations, activeOrganization, isLoading, fetchOrganizations } = useOrganizations();
   const [pendingInvitations, setPendingInvitations] = useState<Array<OrganizationInvitation & { organizationName: string }>>([]);
   const [isAcceptingId, setIsAcceptingId] = useState<string | null>(null);
@@ -23,7 +24,9 @@ export const OrganizationsPage: React.FC = () => {
     setIsAcceptingId(invitationId);
     try {
       const res = await organizationService.acceptInvitationDirect(invitationId);
-      window.location.href = `/organizations/${res.organization.id}`;
+      setPendingInvitations(prev => prev.filter(i => i.id !== invitationId));
+      await fetchOrganizations();
+      navigate(`/organizations/${res.organization.id}`);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
