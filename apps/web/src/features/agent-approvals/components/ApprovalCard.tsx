@@ -56,6 +56,33 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
 
         {/* Proposed Parameters Preview */}
         <div className="text-xs bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1 mb-4">
+          {proposal.proposedAction.claimed_amount && (
+            <div>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Claim Amount: </span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                {String(proposal.proposedAction.claimed_amount)}
+              </span>
+              {proposal.proposedAction.policy_limit && (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 ml-1.5">
+                  (Policy: {String(proposal.proposedAction.policy_limit)})
+                </span>
+              )}
+            </div>
+          )}
+          {proposal.proposedAction.duration && (
+            <div>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Requested Duration: </span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                {String(proposal.proposedAction.duration)}
+              </span>
+            </div>
+          )}
+          {proposal.proposedAction.category && (
+            <div className="truncate">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Category: </span>
+              <span className="text-slate-900 dark:text-slate-100">{String(proposal.proposedAction.category)}</span>
+            </div>
+          )}
           {proposal.proposedAction.title && (
             <div className="truncate">
               <span className="font-semibold text-slate-700 dark:text-slate-300">Title: </span>

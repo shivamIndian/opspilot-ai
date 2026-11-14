@@ -239,20 +239,79 @@ export class ConversationService {
         citations = (answerResult.citations || []).map((c: any) => ({
           chunk_id: c.chunkId || crypto.randomUUID(),
           document_id: c.documentId || crypto.randomUUID(),
-          filename: c.originalFilename || c.documentName || 'Kubernetes_Incident_Runbook.pdf',
+          filename: c.originalFilename || c.documentName || 'Corporate_HR_and_Expense_Policy.pdf',
           score: c.relevanceScore || 0.85,
-          snippet: c.sectionTitle || 'Verified Enterprise Runbook',
+          snippet: c.sectionTitle || 'Verified Enterprise Policy',
         }));
 
-        const isAction = /restart|rollout|apply|increase|scale|remediate|fix|deploy/i.test(content);
+        const isExpense =
+          /expense|reimburse|dinner|meal|bill|claim/i.test(content) &&
+          /exceed|over|limit|approval|approve|more than|7000|5000|exception/i.test(content);
+        const isWfh =
+          /wfh|work from home|remote/i.test(content) &&
+          /extended|weeks|month|waiver|medical|fracture|exception|approval|approve/i.test(content);
+        const isSoftware =
+          /license|software|copilot|figma|laptop|macbook/i.test(content) &&
+          /request|need|approval|approve|grant|allocate/i.test(content);
+        const isK8s =
+          /restart|rollout|apply|increase|scale|remediate|fix|deploy/i.test(content);
+
+        const isAction = isExpense || isWfh || isSoftware || isK8s;
+
         if (isAction) {
           const proposalId = crypto.randomUUID();
-          const proposedPayload = {
-            action: 'kubectl rollout restart deployment/auth-service -n production',
-            target: 'deployment/auth-service',
-            namespace: 'production',
-            reason: 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion',
-          };
+          let actionType = 'kubernetes_rollout_restart';
+          let toolName = 'kubernetes_rollout_restart';
+          let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'high';
+          let proposedPayload: Record<string, any> = {};
+          let justification = '';
+
+          if (isExpense) {
+            actionType = 'expense_reimbursement_exception';
+            toolName = 'expense_reimbursement_override';
+            riskLevel = 'high';
+            proposedPayload = {
+              action: 'Authorize Expense Exception for Finance Disbursement',
+              category: 'Client Entertainment / Business Dinner',
+              claimed_amount: '₹7,000 INR',
+              policy_limit: '₹2,500 INR per person',
+              reason: 'Client entertainment dinner exceeding standard threshold (requires Manager approval)',
+            };
+            justification = 'Authorize expense reimbursement above standard ₹2,500 limit for client engagement';
+          } else if (isWfh) {
+            actionType = 'wfh_policy_waiver';
+            toolName = 'wfh_policy_override';
+            riskLevel = 'medium';
+            proposedPayload = {
+              action: 'Grant Extended Work-From-Home Policy Waiver',
+              duration: '3 Weeks Remote Work',
+              standard_policy: 'Maximum 2 days per week',
+              reason: 'Medical recovery / special circumstances requiring continuous remote work',
+            };
+            justification = 'Special extended work-from-home policy exception approval';
+          } else if (isSoftware) {
+            actionType = 'software_license_allocation';
+            toolName = 'software_license_grant';
+            riskLevel = 'medium';
+            proposedPayload = {
+              action: 'Provision Paid Enterprise Software License',
+              tool_name: 'GitHub Copilot Enterprise License',
+              cost: '$19 / user / month',
+              reason: 'Developer productivity tool allocation requiring Department Head authorization',
+            };
+            justification = 'Provision paid enterprise software seat for developer workflow';
+          } else {
+            actionType = 'kubernetes_rollout_restart';
+            toolName = 'kubernetes_rollout_restart';
+            riskLevel = 'high';
+            proposedPayload = {
+              action: 'kubectl rollout restart deployment/auth-service -n production',
+              target: 'deployment/auth-service',
+              namespace: 'production',
+              reason: 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion',
+            };
+            justification = 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion';
+          }
 
           // Maker-Checker Compliance: Autonomous agent is the requester/maker
           let agentUserId = userId;
@@ -274,11 +333,11 @@ export class ConversationService {
               runId: `run-${conversation.id}`,
               threadId: conversation.id,
               requestedBy: agentUserId,
-              actionType: 'kubernetes_rollout_restart',
-              toolName: 'kubernetes_rollout_restart',
-              riskLevel: 'high',
+              actionType,
+              toolName,
+              riskLevel,
               proposalPayload: proposedPayload,
-              justification: 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion',
+              justification,
               expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
             });
             logger.info(`[ConversationService] Persisted agent action proposal '${proposalId}' to DB.`);
@@ -288,9 +347,9 @@ export class ConversationService {
 
           actionProposals.push({
             proposal_id: proposalId,
-            tool_name: 'kubernetes_rollout_restart',
+            tool_name: toolName,
             proposed_action: proposedPayload,
-            risk_level: 'high',
+            risk_level: riskLevel,
             requires_approval: true,
             status: 'pending',
           });

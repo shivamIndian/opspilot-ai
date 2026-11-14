@@ -128,6 +128,44 @@ export class AgentExecutionGatewayService {
           priority: updatedTicket.priority,
         };
       } else if (
+        proposal.action_type === 'expense_reimbursement_exception' ||
+        proposal.tool_name === 'expense_reimbursement_override'
+      ) {
+        targetEntityType = 'expense_claim';
+        targetEntityId = payload.claimed_amount || '₹7,000 INR';
+        executionResult = {
+          claim_status: 'approved_for_disbursement',
+          amount: payload.claimed_amount || '₹7,000 INR',
+          category: payload.category || 'Client Entertainment',
+          disbursement_channel: 'Direct Payroll Credit',
+          message: 'Expense exception approved. Sent to Finance & Payroll for disbursement in next pay cycle.',
+          executed_at: new Date().toISOString(),
+        };
+      } else if (
+        proposal.action_type === 'wfh_policy_waiver' ||
+        proposal.tool_name === 'wfh_policy_override'
+      ) {
+        targetEntityType = 'wfh_waiver';
+        targetEntityId = payload.duration || '3 Weeks';
+        executionResult = {
+          waiver_status: 'authorized',
+          duration: payload.duration || '3 Weeks',
+          message: 'Extended remote work waiver approved. HR attendance management system updated.',
+          executed_at: new Date().toISOString(),
+        };
+      } else if (
+        proposal.action_type === 'software_license_allocation' ||
+        proposal.tool_name === 'software_license_grant'
+      ) {
+        targetEntityType = 'software_license';
+        targetEntityId = payload.tool_name || 'GitHub Copilot Enterprise';
+        executionResult = {
+          license_status: 'provisioned',
+          tool: payload.tool_name || 'GitHub Copilot Enterprise',
+          message: 'Software seat allocated successfully. Activation invite sent to user email.',
+          executed_at: new Date().toISOString(),
+        };
+      } else if (
         proposal.action_type === 'kubernetes_rollout_restart' ||
         proposal.action_type === 'kubernetes_action' ||
         proposal.tool_name === 'kubernetes_rollout_restart'
