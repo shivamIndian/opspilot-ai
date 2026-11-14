@@ -37,6 +37,9 @@ RUN npm install --omit=dev && npm cache clean --force
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src/database/migrations ./dist/database/migrations
 
+# Ensure app directories and data storage are owned by unprivileged node user
+RUN mkdir -p /app/.data && chown -R node:node /app
+
 # Secure container by dropping root privileges
 USER node
 

@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { pipeline } from 'node:stream/promises';
 import { env } from '../../../config/env.js';
+import { logger } from '../../../utils/logger.js';
 import type { IStorageProvider } from './storage.interface.js';
 import type { SaveFileParams, SaveFileResult, FileMetadataResult } from './storage.types.js';
 
@@ -10,7 +12,21 @@ export class LocalStorageProvider implements IStorageProvider {
 
   constructor(customRoot?: string) {
     const rawRoot = customRoot || env.DOCUMENT_STORAGE_ROOT || '.data/opspilot-uploads';
-    this.storageRoot = path.isAbsolute(rawRoot) ? rawRoot : path.resolve(process.cwd(), rawRoot);
+    const primary = path.isAbsolute(rawRoot) ? rawRoot : path.resolve(process.cwd(), rawRoot);
+
+    try {
+      fs.mkdirSync(primary, { recursive: true });
+      this.storageRoot = primary;
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException)?.code === 'EACCES') {
+        const fallback = path.resolve(os.tmpdir(), 'opspilot-uploads');
+        fs.mkdirSync(fallback, { recursive: true });
+        this.storageRoot = fallback;
+        logger.warn(`[LocalStorageProvider] EACCES on ${primary}. Falling back to writable ${fallback}`);
+      } else {
+        this.storageRoot = primary;
+      }
+    }
   }
 
   /**
@@ -18,7 +34,11 @@ export class LocalStorageProvider implements IStorageProvider {
    * that it stays within the configured organization subfolder.
    */
   public resolvePath(organizationId: string, storageKey: string): string {
-    return this.getSecureFilePath(organizationId, storageKey);
+    const primary = this.getSecureFilePath(organizationId, storageKey);
+    if (fs.existsSync(primary)) return primary;
+    const fallbackPath = path.resolve(os.tmpdir(), 'opspilot-uploads', path.basename(organizationId), path.basename(storageKey));
+    if (fs.existsSync(fallbackPath)) return fallbackPath;
+    return primary;
   }
 
   private getSecureFilePath(organizationId: string, storageKey: string): string {
@@ -45,11 +65,22 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   async save(params: SaveFileParams): Promise<SaveFileResult> {
-    const targetPath = this.getSecureFilePath(params.organizationId, params.storageKey);
-    const parentDir = path.dirname(targetPath);
+    let targetPath = this.getSecureFilePath(params.organizationId, params.storageKey);
+    let parentDir = path.dirname(targetPath);
 
-    // Ensure parent directory exists
-    await fs.promises.mkdir(parentDir, { recursive: true, mode: 0o750 });
+    // Ensure parent directory exists with EACCES fallback
+    try {
+      await fs.promises.mkdir(parentDir, { recursive: true, mode: 0o750 });
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException)?.code === 'EACCES') {
+        this.storageRoot = path.resolve(os.tmpdir(), 'opspilot-uploads');
+        targetPath = this.getSecureFilePath(params.organizationId, params.storageKey);
+        parentDir = path.dirname(targetPath);
+        await fs.promises.mkdir(parentDir, { recursive: true, mode: 0o750 });
+      } else {
+        throw err;
+      }
+    }
 
     if (params.sourcePath) {
       // Copy or rename temporary file into private permanent storage
