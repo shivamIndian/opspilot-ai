@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
+import { ShieldAlert, ArrowRight, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { useOrganizationStore } from '@/store/useOrganizationStore';
 import type { ChatActionProposal } from '../types/chat.types';
 
 export interface ApprovalCardProps {
@@ -10,6 +11,9 @@ export interface ApprovalCardProps {
 }
 
 export const ApprovalCard: React.FC<ApprovalCardProps> = ({ proposal, organizationId }) => {
+  const activeOrganization = useOrganizationStore(s => s.activeOrganization);
+  const isApprover = activeOrganization?.role === 'owner' || activeOrganization?.role === 'admin';
+
   const getRiskVariant = (risk?: string) => {
     switch (risk?.toLowerCase()) {
       case 'critical':
@@ -52,13 +56,20 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ proposal, organizati
       )}
 
       <div className="flex justify-end pt-1">
-        <Link
-          to={`/organizations/${organizationId}/approvals`}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors"
-        >
-          <span>Review in Approval Inbox</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
+        {isApprover ? (
+          <Link
+            to={`/organizations/${organizationId}/approvals`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors cursor-pointer"
+          >
+            <span>Review in Approval Inbox</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium">
+            <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+            <span>Submitted for Administrator Authorization</span>
+          </div>
+        )}
       </div>
     </div>
   );
