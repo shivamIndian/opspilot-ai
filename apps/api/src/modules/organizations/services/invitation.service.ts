@@ -94,7 +94,6 @@ export class InvitationService {
       status: invitation.status,
       expiresAt: invitation.expires_at.toISOString(),
       createdAt: invitation.created_at.toISOString(),
-      token: rawToken,
       inviteUrl: `${config.FRONTEND_URL}/invitations/accept?token=${rawToken}`,
     };
   }
@@ -220,12 +219,8 @@ export class InvitationService {
       throw new Error('USER_NOT_FOUND');
     }
 
-    // Auto-verify email if not verified yet during invitation acceptance
     if (!user.email_verified_at) {
-      await pool.query(
-        'UPDATE app.users SET email_verified_at = CURRENT_TIMESTAMP WHERE id = $1',
-        [user.id]
-      );
+      throw new Error('EMAIL_NOT_VERIFIED');
     }
 
     const tokenHash = tokenService.hashToken(rawToken);
