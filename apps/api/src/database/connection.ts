@@ -17,13 +17,46 @@ export const getSanitizedDatabaseUrl = (url: string): string => {
   }
 };
 
+export const normalizeDatabaseUrl = (rawUrl: string): string => {
+  try {
+    const parsed = new URL(rawUrl);
+
+    // If host is direct Supabase IPv6 host (db.<project-ref>.supabase.co):
+    // Render Free Tier has no outbound IPv6 route (causes connect ENETUNREACH).
+    // Automatically route to Supabase IPv4 connection pooler.
+    const directMatch = parsed.hostname.match(/^db\.([a-z0-9]+)\.supabase\.co$/i);
+    if (directMatch) {
+      const projectRef = directMatch[1];
+      parsed.hostname = 'aws-1-ap-south-1.pooler.supabase.com';
+      parsed.port = '5432';
+      if (!parsed.username.includes('.')) {
+        parsed.username = `postgres.${projectRef}`;
+      }
+      return parsed.toString();
+    }
+
+    // If user configured aws-0 pooler for project in aws-1 cluster:
+    if (parsed.hostname === 'aws-0-ap-south-1.pooler.supabase.com' && parsed.username.includes('dyvyxhlaghyptspucqbq')) {
+      parsed.hostname = 'aws-1-ap-south-1.pooler.supabase.com';
+      return parsed.toString();
+    }
+
+    return rawUrl;
+  } catch {
+    return rawUrl;
+  }
+};
+
+export const effectiveDatabaseUrl = normalizeDatabaseUrl(config.DATABASE_URL);
+
 const isCloudOrProduction =
   config.NODE_ENV === 'production' ||
-  config.DATABASE_URL.includes('supabase.co') ||
-  config.DATABASE_URL.includes('sslmode=require');
+  effectiveDatabaseUrl.includes('supabase.co') ||
+  effectiveDatabaseUrl.includes('pooler.supabase.com') ||
+  effectiveDatabaseUrl.includes('sslmode=require');
 
 export const pool = new Pool({
-  connectionString: config.DATABASE_URL,
+  connectionString: effectiveDatabaseUrl,
   max: config.DATABASE_POOL_MAX,
   idleTimeoutMillis: config.DATABASE_IDLE_TIMEOUT_MS,
   connectionTimeoutMillis: config.DATABASE_CONNECTION_TIMEOUT_MS,

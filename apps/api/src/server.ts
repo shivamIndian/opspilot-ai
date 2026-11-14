@@ -2,7 +2,7 @@ import http from 'http';
 import { app } from './app.js';
 import { config } from './config/env.js';
 import { logger } from './utils/logger.js';
-import { closePool, getSanitizedDatabaseUrl } from './database/index.js';
+import { closePool, getSanitizedDatabaseUrl, effectiveDatabaseUrl } from './database/index.js';
 import { closeRedis, getSanitizedRedisUrl } from './redis/index.js';
 import { closeDocumentProcessingQueue } from './queues/document-processing.queue.js';
 import { closeDocumentEmbeddingQueue } from './queues/document-embedding.queue.js';
@@ -14,7 +14,7 @@ const startServer = () => {
     logger.info(`🚀 OpsPilot Core API listening on port ${config.PORT} [${config.NODE_ENV}]`);
     logger.info(`👉 Health Liveness:  http://localhost:${config.PORT}/api/v1/health`);
     logger.info(`👉 Health Readiness: http://localhost:${config.PORT}/api/v1/health/ready`);
-    logger.info(`👉 Database Target:  ${getSanitizedDatabaseUrl(config.DATABASE_URL)}`);
+    logger.info(`👉 Database Target:  ${getSanitizedDatabaseUrl(effectiveDatabaseUrl)}`);
     logger.info(`👉 Redis Target:     ${getSanitizedRedisUrl(config.REDIS_URL)}`);
     logger.info(`👉 Allowed CORS:     ${config.FRONTEND_URL}`);
   });
