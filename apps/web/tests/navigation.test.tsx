@@ -21,15 +21,25 @@ describe('Navigation System', () => {
       });
     });
 
-    it('ensures workspace and AI operation routes are accessible by default', () => {
+    it('ensures workspace routes are accessible by default, while developer AI modules are protected for super admins/admins', () => {
       const workspaceSection = NAVIGATION_CONFIG.find(s => s.key === 'WORKSPACE');
       workspaceSection?.items.forEach(item => {
         expect(item.allowedRoles).toBeUndefined();
       });
 
       const aiSection = NAVIGATION_CONFIG.find(s => s.key === 'AI_OPERATIONS');
-      aiSection?.items.forEach(item => {
-        expect(item.allowedRoles).toBeUndefined();
+      const publicAiItems = aiSection?.items.filter(i => !i.allowedRoles);
+      const adminAiItems = aiSection?.items.filter(i => i.allowedRoles);
+
+      expect(publicAiItems?.map(i => i.id)).toEqual(['ai-chat', 'ai-approvals']);
+      expect(adminAiItems?.map(i => i.id)).toEqual([
+        'ai-workflows',
+        'ai-monitoring',
+        'ai-evaluation',
+        'ai-memory',
+      ]);
+      adminAiItems?.forEach(item => {
+        expect(item.allowedRoles).toEqual(['owner', 'admin']);
       });
     });
 

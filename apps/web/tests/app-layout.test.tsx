@@ -135,5 +135,42 @@ describe('AppLayout Components', () => {
       fireEvent.click(collapseBtn);
       expect(handleToggle).toHaveBeenCalledTimes(1);
     });
+
+    it('hides technical developer and monitoring modules from regular members', () => {
+      useOrganizationStore.setState({
+        activeOrganization: {
+          id: 'org-test-456',
+          name: 'Nexus Ops',
+          slug: 'nexus-ops',
+          role: 'member',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+      render(
+        <MemoryRouter initialEntries={['/organizations/org-test-456']}>
+          <Sidebar
+            isCollapsed={false}
+            onToggleCollapse={vi.fn()}
+            isMobileOpen={false}
+            onCloseMobile={vi.fn()}
+          />
+        </MemoryRouter>
+      );
+
+      // Core workspace items are visible
+      expect(screen.getAllByText('Support Tickets')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Knowledge Base')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('AI Chat Assistant')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Approval Inbox')[0]).toBeInTheDocument();
+
+      // Technical admin modules are hidden for regular members
+      expect(screen.queryByText('AI Workflows')).toBeNull();
+      expect(screen.queryByText('Agent Monitoring')).toBeNull();
+      expect(screen.queryByText('AI Evaluation')).toBeNull();
+      expect(screen.queryByText('Agent Memory')).toBeNull();
+      expect(screen.queryByText('Administration')).toBeNull();
+    });
   });
 });

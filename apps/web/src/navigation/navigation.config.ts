@@ -59,14 +59,6 @@ export const NAVIGATION_CONFIG: NavigationSection[] = [
         section: 'AI_OPERATIONS',
       },
       {
-        id: 'ai-workflows',
-        label: 'AI Workflows',
-        icon: Workflow,
-        href: orgId => `/organizations/${orgId}/agent/workflows`,
-        pattern: /^\/organizations\/[^/]+\/agent\/workflows/,
-        section: 'AI_OPERATIONS',
-      },
-      {
         id: 'ai-approvals',
         label: 'Approval Inbox',
         icon: ShieldCheck,
@@ -75,12 +67,22 @@ export const NAVIGATION_CONFIG: NavigationSection[] = [
         section: 'AI_OPERATIONS',
       },
       {
+        id: 'ai-workflows',
+        label: 'AI Workflows',
+        icon: Workflow,
+        href: orgId => `/organizations/${orgId}/agent/workflows`,
+        pattern: /^\/organizations\/[^/]+\/agent\/workflows/,
+        section: 'AI_OPERATIONS',
+        allowedRoles: ['owner', 'admin'],
+      },
+      {
         id: 'ai-monitoring',
         label: 'Agent Monitoring',
         icon: Activity,
         href: orgId => `/organizations/${orgId}/agent-monitoring`,
         pattern: /^\/organizations\/[^/]+\/agent-monitoring/,
         section: 'AI_OPERATIONS',
+        allowedRoles: ['owner', 'admin'],
       },
       {
         id: 'ai-evaluation',
@@ -89,6 +91,7 @@ export const NAVIGATION_CONFIG: NavigationSection[] = [
         href: orgId => `/organizations/${orgId}/ai-evaluation`,
         pattern: /^\/organizations\/[^/]+\/ai-evaluation/,
         section: 'AI_OPERATIONS',
+        allowedRoles: ['owner', 'admin'],
       },
       {
         id: 'ai-memory',
@@ -97,6 +100,7 @@ export const NAVIGATION_CONFIG: NavigationSection[] = [
         href: orgId => `/organizations/${orgId}/settings/ai-memory`,
         pattern: /^\/organizations\/[^/]+\/settings\/ai-memory/,
         section: 'AI_OPERATIONS',
+        allowedRoles: ['owner', 'admin'],
       },
     ],
   },
