@@ -65,6 +65,7 @@ export const NAVIGATION_CONFIG: NavigationSection[] = [
         href: orgId => `/organizations/${orgId}/approvals`,
         pattern: /^\/organizations\/[^/]+\/approvals/,
         section: 'AI_OPERATIONS',
+        allowedRoles: ['owner', 'admin'],
       },
       {
         id: 'ai-workflows',

@@ -20,6 +20,7 @@ import {
   RefreshCw,
   AlertCircle,
   Inbox,
+  Lock,
 } from 'lucide-react';
 
 export const ApprovalInbox: React.FC = () => {
@@ -140,6 +141,16 @@ export const ApprovalInbox: React.FC = () => {
           Refresh
         </button>
       </div>
+
+      {/* Member Governance Notice */}
+      {activeOrganization?.role === 'member' && (
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2.5">
+          <Lock className="w-4 h-4 shrink-0 text-amber-400" />
+          <span>
+            <strong>Read-Only Member View:</strong> High-risk autonomous actions require authorization by an Organization Administrator or Owner. You can track proposal status here, but action authorization buttons are disabled for non-admin members.
+          </span>
+        </div>
+      )}
 
       {/* Error message */}
       {errorMessage && (
