@@ -128,13 +128,13 @@ export const RegisterPage: React.FC = () => {
               Account Created Successfully
             </h1>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-sm mx-auto">
-              A verification email has been dispatched to{' '}
+              Your enterprise account has been created for{' '}
               <span className="font-semibold text-[var(--text-primary)] font-mono">{email}</span>.
-              Please verify your email address to activate all platform capabilities.
+              You can now sign in to access your autonomous operations workspace.
             </p>
 
             <div className="pt-4">
-              <Link to="/login">
+              <Link to="/login" state={{ email }}>
                 <Button variant="primary" size="md" className="w-full">
                   Proceed to Sign In
                 </Button>

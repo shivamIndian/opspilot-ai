@@ -21,7 +21,8 @@ export const LoginPage: React.FC = () => {
   const location = useLocation();
   const { setAuth } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const initialEmail = (location.state as { email?: string })?.email || '';
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
