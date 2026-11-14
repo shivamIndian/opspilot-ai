@@ -3,7 +3,6 @@ import { useOutletContext, Link } from 'react-router-dom';
 import {
   Ticket,
   BookOpen,
-  FileText,
   Workflow,
   ShieldCheck,
   BrainCircuit,
@@ -54,21 +53,12 @@ export const WorkspaceOverviewPage: React.FC = () => {
     },
     {
       id: 'knowledge',
-      title: 'Knowledge Base (RAG)',
-      description: 'Hybrid semantic and vector retrieval engine grounded in enterprise documentation.',
+      title: 'Knowledge Base & Documents Hub',
+      description: 'Unified enterprise document management, automated chunking, vector embeddings, and hybrid semantic retrieval.',
       icon: BookOpen,
-      href: `/organizations/${organization.id}/knowledge/search`,
-      badge: 'RAG Retrieval',
+      href: `/organizations/${organization.id}/knowledge`,
+      badge: 'Unified RAG',
       badgeVariant: 'success' as const,
-    },
-    {
-      id: 'documents',
-      title: 'Documents Management',
-      description: 'Secure multi-tenant file storage, background chunking, embedding generation, and status tracking.',
-      icon: FileText,
-      href: `/organizations/${organization.id}/documents`,
-      badge: 'Pipeline',
-      badgeVariant: 'neutral' as const,
     },
     {
       id: 'workflows',
@@ -158,11 +148,11 @@ export const WorkspaceOverviewPage: React.FC = () => {
               <span>New Ticket</span>
             </Link>
             <Link
-              to={`/organizations/${organization.id}/documents`}
+              to={`/organizations/${organization.id}/knowledge`}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-3.5 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
             >
               <Upload className="h-3.5 w-3.5 text-[var(--text-tertiary)]" />
-              <span>Upload Doc</span>
+              <span>Knowledge Hub</span>
             </Link>
             <Link
               to={`/organizations/${organization.id}/knowledge/search`}

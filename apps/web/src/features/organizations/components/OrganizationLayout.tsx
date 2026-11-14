@@ -14,8 +14,7 @@ import {
   AlertCircle,
   LayoutDashboard,
   Ticket as TicketIcon,
-  FileText,
-  Compass,
+  BookOpen,
 } from 'lucide-react';
 
 export const OrganizationLayout: React.FC = () => {
@@ -174,7 +173,7 @@ export const OrganizationLayout: React.FC = () => {
           </NavLink>
 
           <NavLink
-            to={`/organizations/${organization.id}/documents`}
+            to={`/organizations/${organization.id}/knowledge`}
             className={({ isActive }) =>
               `flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
                 isActive
@@ -183,22 +182,8 @@ export const OrganizationLayout: React.FC = () => {
               }`
             }
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Documents</span>
-          </NavLink>
-
-          <NavLink
-            to={`/organizations/${organization.id}/knowledge/search`}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
-                isActive
-                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`
-            }
-          >
-            <Compass className="w-3.5 h-3.5" />
-            <span>RAG Search</span>
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Knowledge Base</span>
           </NavLink>
 
           <NavLink

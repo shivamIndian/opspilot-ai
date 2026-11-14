@@ -123,7 +123,7 @@ describe('AppLayout Components', () => {
       expect(screen.getAllByText('Overview')[0]).toBeInTheDocument();
       expect(screen.getAllByText('Support Tickets')[0]).toBeInTheDocument();
       expect(screen.getAllByText('Knowledge Base')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Documents')[0]).toBeInTheDocument();
+      expect(screen.queryByText('Documents')).toBeNull();
       expect(screen.getAllByText('AI Operations')[0]).toBeInTheDocument();
       expect(screen.getAllByText('AI Workflows')[0]).toBeInTheDocument();
       expect(screen.getAllByText('Approval Inbox')[0]).toBeInTheDocument();

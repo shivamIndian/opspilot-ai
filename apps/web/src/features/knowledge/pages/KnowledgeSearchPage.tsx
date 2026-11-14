@@ -84,7 +84,7 @@ export const KnowledgeSearchPage: React.FC = () => {
         </div>
 
         <Link
-          to={`/organizations/${organizationId}/documents`}
+          to={`/organizations/${organizationId}/knowledge?tab=documents`}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
         >
           <FileText className="w-3.5 h-3.5 text-indigo-500" />

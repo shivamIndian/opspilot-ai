@@ -311,7 +311,7 @@ describe('Module 17 – Authentication UI Component & Flow Suite', () => {
       fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
       expect(await screen.findByText('Account Created Successfully')).toBeInTheDocument();
-      expect(screen.getByText(/Please go to login page/i)).toBeInTheDocument();
+      expect(screen.getByText(/Proceed to Sign In/i)).toBeInTheDocument();
       expect(authService.register).toHaveBeenCalledWith({
         name: 'Alice Johnson',
         email: 'alice@company.com',

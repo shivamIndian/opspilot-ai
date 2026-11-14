@@ -31,7 +31,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation, organizati
 
       <div className="mt-1 flex items-center justify-end">
         <Link
-          to={`/organizations/${organizationId}/documents`}
+          to={`/organizations/${organizationId}/knowledge`}
           className="flex items-center gap-1 text-[10px] font-semibold text-[var(--brand-primary)] hover:underline"
         >
           <span>View Source Document</span>

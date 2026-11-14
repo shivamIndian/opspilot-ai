@@ -30,7 +30,7 @@ export const KnowledgeBaseOverview: React.FC<KnowledgeBaseOverviewProps> = ({
           </CardDescription>
         </div>
         <Link
-          to={`/organizations/${organizationId}/documents`}
+          to={`/organizations/${organizationId}/knowledge`}
           className="flex items-center gap-1 text-xs font-semibold text-[var(--brand-primary)] hover:underline"
         >
           <span>Manage</span>
