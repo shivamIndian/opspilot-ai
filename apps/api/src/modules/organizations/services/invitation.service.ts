@@ -1,4 +1,5 @@
 import { pool } from '../../../database/index.js';
+import { config } from '../../../config/env.js';
 import { invitationRepository } from '../repositories/invitation.repository.js';
 import { organizationRepository } from '../repositories/organization.repository.js';
 import { memberRepository } from '../repositories/member.repository.js';
@@ -93,6 +94,8 @@ export class InvitationService {
       status: invitation.status,
       expiresAt: invitation.expires_at.toISOString(),
       createdAt: invitation.created_at.toISOString(),
+      token: rawToken,
+      inviteUrl: `${config.FRONTEND_URL}/invitations/accept?token=${rawToken}`,
     };
   }
 

@@ -4,7 +4,6 @@ import { conversationRepository, ConversationRepository } from '../repositories/
 import { workflowService, WorkflowService } from '../../agent-workflows/services/workflow.service.js';
 import { knowledgeAnswerService } from '../../knowledge/services/knowledge-answer.service.js';
 import { agentApprovalRepository } from '../../agent-approvals/repositories/agent-approval.repository.js';
-import { pool } from '../../../database/connection.js';
 import { logger } from '../../../utils/logger.js';
 import type {
   SafeConversation,
@@ -313,18 +312,8 @@ export class ConversationService {
             justification = 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion';
           }
 
-          // Maker-Checker Compliance: Autonomous agent is the requester/maker
-          let agentUserId = userId;
-          try {
-            const agentUserRes = await pool.query(
-              "SELECT id FROM app.users WHERE email = 'agent@opspilot.internal' LIMIT 1"
-            );
-            if (agentUserRes.rows[0]?.id) {
-              agentUserId = agentUserRes.rows[0].id;
-            }
-          } catch (agentLookupErr) {
-            logger.warn(`[ConversationService] Agent user lookup warning: ${agentLookupErr}`);
-          }
+          // Maker-Checker Compliance: The chatting user is the requester (maker)
+          const requesterUserId = userId || conversation.userId;
 
           try {
             await agentApprovalRepository.createProposal({
@@ -332,7 +321,7 @@ export class ConversationService {
               organizationId,
               runId: `run-${conversation.id}`,
               threadId: conversation.id,
-              requestedBy: agentUserId,
+              requestedBy: requesterUserId,
               actionType,
               toolName,
               riskLevel,

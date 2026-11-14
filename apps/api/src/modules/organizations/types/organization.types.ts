@@ -94,6 +94,8 @@ export interface SafeOrganizationInvitation {
   status: InvitationStatus;
   expiresAt: string;
   createdAt: string;
+  token?: string;
+  inviteUrl?: string;
 }
 
 export interface OrganizationAuditLogEntity {

@@ -4,7 +4,7 @@ import type { SafeOrganization, OrganizationInvitation } from '@/types/organizat
 import { organizationService } from '@/services/organizationService';
 import { InvitationTable } from '../components/InvitationTable';
 import { InviteMemberDialog } from '../components/InviteMemberDialog';
-import { Mail, UserPlus, Filter, Loader2, AlertCircle } from 'lucide-react';
+import { Mail, UserPlus, Filter, Loader2, AlertCircle, Copy, Check } from 'lucide-react';
 
 export const OrganizationInvitationsPage: React.FC = () => {
   const { organization } = useOutletContext<{ organization: SafeOrganization }>();
@@ -13,6 +13,8 @@ export const OrganizationInvitationsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [createdInviteUrl, setCreatedInviteUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -77,8 +79,17 @@ export const OrganizationInvitationsPage: React.FC = () => {
   };
 
   const handleInvite = async (email: string, role: 'admin' | 'member') => {
-    await organizationService.createInvitation(organization.id, { email, role });
-    setStatusMessage({ type: 'success', text: `Invitation dispatched to ${email}` });
+    const inv = await organizationService.createInvitation(organization.id, { email, role });
+    if (inv?.inviteUrl) {
+      setCreatedInviteUrl(inv.inviteUrl);
+      setCopied(false);
+      setStatusMessage({
+        type: 'success',
+        text: `Invitation dispatched to ${email}. Share the direct invitation link below with the user.`,
+      });
+    } else {
+      setStatusMessage({ type: 'success', text: `Invitation dispatched to ${email}` });
+    }
     await fetchInvitations();
   };
 
@@ -114,6 +125,29 @@ export const OrganizationInvitationsPage: React.FC = () => {
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{statusMessage.text}</span>
+        </div>
+      )}
+
+      {createdInviteUrl && (
+        <div className="p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-xs text-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md animate-in fade-in">
+          <div className="space-y-1 overflow-hidden">
+            <span className="font-semibold block text-white">Direct Invitation URL:</span>
+            <span className="font-mono text-[11px] block truncate text-indigo-300 bg-slate-900/60 p-1.5 rounded border border-indigo-500/20 select-all">
+              {createdInviteUrl}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(createdInviteUrl);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 3000);
+            }}
+            className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Copied Link!' : 'Copy Link'}</span>
+          </button>
         </div>
       )}
 

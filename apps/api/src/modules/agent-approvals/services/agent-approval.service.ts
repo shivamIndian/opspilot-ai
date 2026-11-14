@@ -104,8 +104,9 @@ export class AgentApprovalService {
 
       // 2. Find any proposals in conversation_messages not yet in agent_action_proposals
       const msgRes = await pool.query(
-        `SELECT m.id, m.conversation_id, m.action_proposals, m.created_at
+        `SELECT m.id, m.conversation_id, m.action_proposals, m.created_at, c.user_id AS requester_user_id
          FROM app.conversation_messages m
+         LEFT JOIN app.conversations c ON m.conversation_id = c.id
          WHERE m.organization_id = $1 AND jsonb_array_length(m.action_proposals) > 0
          ORDER BY m.created_at DESC LIMIT 10`,
         [organizationId]
@@ -137,7 +138,7 @@ export class AgentApprovalService {
                 organizationId,
                 `run-${row.conversation_id}`,
                 row.conversation_id,
-                agentUserId,
+                row.requester_user_id || agentUserId,
                 p.tool_name || 'kubernetes_rollout_restart',
                 p.tool_name || 'kubernetes_rollout_restart',
                 p.risk_level || 'high',
