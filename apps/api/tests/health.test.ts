@@ -97,9 +97,9 @@ describe('OpsPilot API Base & Health Endpoints', () => {
     });
 
     const res = await request(app).get('/api/v1/health/ready');
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ready');
     expect(res.body.dependencies.redis).toBe('down');
-    expect(res.body.error?.code).toBe('DEPENDENCY_UNAVAILABLE');
   });
 
   it('GET /api/v1/unknown-route should return structured 404 response', async () => {

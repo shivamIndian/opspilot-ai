@@ -9,6 +9,7 @@ import {
   HardDrive,
   Files,
   Search,
+  AlertCircle,
 } from 'lucide-react';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useAuth } from '@/hooks/useAuth';
@@ -145,6 +146,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({
 
   const handleSearch = (query: string) => {
     setLastSubmittedQuery(query);
+    answerMutation.reset();
     searchMutation.mutate({
       query,
       topK,
@@ -402,9 +404,54 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({
             </div>
           </div>
 
+          {/* Search Error State */}
+          {searchMutation.isError && !searchMutation.isPending && (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-red-400">
+                <AlertCircle className="w-4 h-4 text-red-400" />
+                <span>Search Failed</span>
+              </div>
+              <p className="text-xs text-red-300/90 leading-relaxed">
+                {(searchMutation.error as any)?.response?.data?.error?.message ||
+                  (searchMutation.error as Error)?.message ||
+                  'An unexpected error occurred during search. Please check your network and try again.'}
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleSearch(lastSubmittedQuery)}
+                className="text-xs mt-1"
+              >
+                Retry Search
+              </Button>
+            </div>
+          )}
+
           {/* Ask AI Answer Generation Status & Result Card */}
           {answerMutation.isPending && (
             <AnswerGenerationStatus query={lastSubmittedQuery} />
+          )}
+
+          {answerMutation.isError && !answerMutation.isPending && (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-red-400">
+                <AlertCircle className="w-4 h-4 text-red-400" />
+                <span>AI Answer Generation Failed</span>
+              </div>
+              <p className="text-xs text-red-300/90 leading-relaxed">
+                {(answerMutation.error as any)?.response?.data?.error?.message ||
+                  (answerMutation.error as Error)?.message ||
+                  'An unexpected error occurred while generating the answer. Please try again.'}
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleAskAI(lastSubmittedQuery)}
+                className="text-xs mt-1"
+              >
+                Retry AI Generation
+              </Button>
+            </div>
           )}
 
           {answerMutation.data && (
