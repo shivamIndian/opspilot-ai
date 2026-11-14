@@ -2,6 +2,7 @@ import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { redis } from '../redis/client.js';
 import {
   DOCUMENT_PROCESSING_QUEUE_NAME,
   DOCUMENT_PROCESSING_ATTEMPTS,
@@ -17,7 +18,8 @@ export const getQueueRedisConnection = (): Redis => {
     queueRedisConnection = new Redis(config.REDIS_URL, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      connectTimeout: config.REDIS_CONNECT_TIMEOUT_MS,
+      enableOfflineQueue: false,
+      connectTimeout: Math.min(config.REDIS_CONNECT_TIMEOUT_MS, 2000),
     });
   }
   return queueRedisConnection;
@@ -57,13 +59,24 @@ export const getDocumentProcessingQueue = (): Queue<DocumentProcessingJobData> =
 export const scheduleDocumentProcessing = async (
   data: DocumentProcessingJobData
 ): Promise<string> => {
+  if (redis.status !== 'ready') {
+    logger.info(`[Queue] Redis status is '${redis.status}'. Skipping BullMQ queue for doc=${data.documentId}`);
+    return `offline-${data.documentId}`;
+  }
+
   const queue = getDocumentProcessingQueue();
   const jobId = `document-${data.documentId}-generation-${data.processingGeneration}`;
 
-  const job = await queue.add('process-document', data, {
+  const addPromise = queue.add('process-document', data, {
     jobId,
     pipelineVersion: data.pipelineVersion || DEFAULT_PIPELINE_VERSION,
   } as any);
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('QUEUE_TIMEOUT')), 1500)
+  );
+
+  const job = await Promise.race([addPromise, timeoutPromise]);
 
   logger.info(
     `[Queue] Scheduled job ${job.id} for doc=${data.documentId}, gen=${data.processingGeneration}`

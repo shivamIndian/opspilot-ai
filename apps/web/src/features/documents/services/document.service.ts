@@ -33,6 +33,7 @@ export const documentService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 60000,
         onUploadProgress: progressEvent => {
           if (progressEvent.total && onProgress) {
             const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);

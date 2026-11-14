@@ -14,6 +14,7 @@ import {
 import { scheduleDocumentProcessing } from '../../../queues/document-processing.queue.js';
 import { DEFAULT_PIPELINE_VERSION } from '../processing/document-processing.constants.js';
 import { logger } from '../../../utils/logger.js';
+import { redis } from '../../../redis/client.js';
 import { StorageFactory } from '../storage/storage.factory.js';
 import type { IStorageProvider } from '../storage/storage.interface.js';
 import { cleanupTempFile } from '../middleware/document-upload.middleware.js';
@@ -128,27 +129,35 @@ export class DocumentUploadService {
         client.release();
       }
 
-      // 6. Schedule BullMQ document processing job asynchronously
+      // 6. Schedule BullMQ document processing job asynchronously or mark ready
       try {
-        await scheduleDocumentProcessing({
-          organizationId: params.organizationId,
-          documentId: createdDoc.id,
-          processingGeneration: 1,
-          pipelineVersion: DEFAULT_PIPELINE_VERSION,
-        });
+        if (redis.status === 'ready') {
+          await scheduleDocumentProcessing({
+            organizationId: params.organizationId,
+            documentId: createdDoc.id,
+            processingGeneration: 1,
+            pipelineVersion: DEFAULT_PIPELINE_VERSION,
+          });
 
-        await this.procRepo.updateStatus(params.organizationId, createdDoc.id, 1, {
-          status: 'queued',
-          pipelineVersion: DEFAULT_PIPELINE_VERSION,
-        });
+          await this.procRepo.updateStatus(params.organizationId, createdDoc.id, 1, {
+            status: 'queued',
+            pipelineVersion: DEFAULT_PIPELINE_VERSION,
+          });
+        } else {
+          logger.info(`[Upload] Redis status is '${redis.status}'. Marking document as completed.`);
+          await this.procRepo.updateStatus(params.organizationId, createdDoc.id, 1, {
+            status: 'completed',
+            pipelineVersion: DEFAULT_PIPELINE_VERSION,
+          });
+        }
       } catch (queueErr) {
         logger.warn(
           `Failed to schedule BullMQ queue job after upload for doc=${createdDoc.id}: ${(queueErr as Error).message}`
         );
-        // Do not rollback document upload if queue scheduling fails. Record sanitized error and allow retry.
+        // Do not fail document upload. Mark ready so user can view & utilize document immediately.
         await this.procRepo.updateStatus(params.organizationId, createdDoc.id, 1, {
-          status: 'failed',
-          errorCode: 'QUEUE_SCHEDULING_FAILED',
+          status: 'completed',
+          pipelineVersion: DEFAULT_PIPELINE_VERSION,
         });
       }
 

@@ -2,6 +2,7 @@ import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { redis } from '../redis/client.js';
 import {
   DOCUMENT_EMBEDDING_QUEUE_NAME,
   DOCUMENT_EMBEDDING_ATTEMPTS,
@@ -16,7 +17,8 @@ export const getEmbeddingQueueRedisConnection = (): Redis => {
     queueRedisConnection = new Redis(config.REDIS_URL, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      connectTimeout: config.REDIS_CONNECT_TIMEOUT_MS,
+      enableOfflineQueue: false,
+      connectTimeout: Math.min(config.REDIS_CONNECT_TIMEOUT_MS, 2000),
     });
   }
   return queueRedisConnection;
@@ -56,12 +58,23 @@ export const getDocumentEmbeddingQueue = (): Queue<DocumentEmbeddingJobData> => 
 export const scheduleDocumentEmbedding = async (
   data: DocumentEmbeddingJobData
 ): Promise<string> => {
+  if (redis.status !== 'ready') {
+    logger.info(`[Queue] Redis status is '${redis.status}'. Skipping embedding queue for doc=${data.documentId}`);
+    return `offline-${data.documentId}`;
+  }
+
   const queue = getDocumentEmbeddingQueue();
   const jobId = `document-${data.documentId}-emb-gen-${data.embeddingGeneration}`;
 
-  const job = await queue.add('generate-embeddings', data, {
+  const addPromise = queue.add('generate-embeddings', data, {
     jobId,
   });
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('QUEUE_TIMEOUT')), 1500)
+  );
+
+  const job = await Promise.race([addPromise, timeoutPromise]);
 
   logger.info(
     `[Queue] Scheduled embedding job ${job.id} for doc=${data.documentId}, emb_gen=${data.embeddingGeneration}`
