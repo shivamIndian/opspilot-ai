@@ -187,4 +187,19 @@ export const organizationService = {
     }
     return res.data.data;
   },
+
+  async listMyPendingInvitations(): Promise<Array<OrganizationInvitation & { organizationName: string }>> {
+    const res = await apiClient.get<ApiResponse<{ invitations: Array<OrganizationInvitation & { organizationName: string }> }>>('/invitations/my-pending');
+    return res.data.data?.invitations || [];
+  },
+
+  async acceptInvitationDirect(invitationId: string): Promise<{ organization: SafeOrganization; role: string }> {
+    const res = await apiClient.post<ApiResponse<{ organization: SafeOrganization; role: string }>>(
+      `/invitations/${invitationId}/accept-direct`
+    );
+    if (!res.data.data) {
+      throw new Error(res.data.error?.message || 'Failed to accept invitation');
+    }
+    return res.data.data;
+  },
 };

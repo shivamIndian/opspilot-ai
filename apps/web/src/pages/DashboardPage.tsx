@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { organizationService } from '@/services/organizationService';
+import type { OrganizationInvitation } from '@/types/organization';
 import {
   User,
   Shield,
@@ -21,6 +23,31 @@ export const DashboardPage: React.FC = () => {
   const { user, logout, logoutAll } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<Array<OrganizationInvitation & { organizationName: string }>>([]);
+  const [isAcceptingId, setIsAcceptingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    organizationService
+      .listMyPendingInvitations()
+      .then(invs => setPendingInvitations(invs))
+      .catch(err => console.warn('Failed to fetch pending invitations', err));
+  }, []);
+
+  const handleAcceptDirect = async (invitationId: string) => {
+    setIsAcceptingId(invitationId);
+    try {
+      const res = await organizationService.acceptInvitationDirect(invitationId);
+      window.location.href = `/organizations/${res.organization.id}`;
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ||
+        (err as Error).message ||
+        'Failed to accept invitation';
+      alert(msg);
+      setIsAcceptingId(null);
+    }
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -99,6 +126,63 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Pending Workspace Invitations */}
+      {pendingInvitations.length > 0 && (
+        <div className="space-y-4 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              <span>Pending Workspace Invitations ({pendingInvitations.length})</span>
+            </h2>
+            <span className="text-xs text-slate-400">Action required to join team workspace</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pendingInvitations.map(inv => (
+              <div
+                key={inv.id}
+                className="rounded-2xl border border-indigo-500/40 bg-gradient-to-br from-indigo-950/70 via-slate-900 to-slate-900 p-6 shadow-xl flex flex-col justify-between gap-5 relative overflow-hidden"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider font-mono">
+                      Role: {inv.role}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Expires {new Date(inv.expiresAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-extrabold text-white tracking-tight">
+                    {inv.organizationName || 'Enterprise Workspace'}
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    You have been invited by <strong className="text-white font-medium">{inv.invitedByName || 'an administrator'}</strong> to join this organization workspace.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleAcceptDirect(inv.id)}
+                  disabled={Boolean(isAcceptingId)}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isAcceptingId === inv.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Joining Workspace...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Accept Invitation & Enter Workspace</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Grid: Profile & Security Posture */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

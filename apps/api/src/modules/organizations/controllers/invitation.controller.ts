@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { invitationService } from '../services/invitation.service.js';
+import { userRepository } from '../../auth/repositories/user.repository.js';
 import { inviteMemberSchema, acceptInvitationSchema } from '../validators/organization.schema.js';
 import type { InvitationStatus } from '../types/organization.types.js';
 
@@ -282,6 +283,57 @@ export class InvitationController {
         });
         return;
       }
+      next(error);
+    }
+  }
+
+  async listMyPending(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+        return;
+      }
+
+      const user = await userRepository.findById(req.user.id);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: { code: 'USER_NOT_FOUND', message: 'User not found' },
+        });
+        return;
+      }
+
+      const pending = await invitationService.listPendingForUser(user.email);
+      res.status(200).json({
+        success: true,
+        data: { invitations: pending },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async acceptDirect(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+        return;
+      }
+
+      const invitationId = req.params.invitationId;
+      const result = await invitationService.acceptInvitationDirect(req.user.id, invitationId);
+      res.status(200).json({
+        success: true,
+        message: `Successfully joined ${result.organization.name}`,
+        data: result,
+      });
+    } catch (error) {
       next(error);
     }
   }

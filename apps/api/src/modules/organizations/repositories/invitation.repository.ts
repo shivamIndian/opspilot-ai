@@ -221,6 +221,33 @@ export class InvitationRepository {
     );
     return res.rows[0] || null;
   }
+
+  async findPendingByEmail(
+    email: string
+  ): Promise<Array<SafeOrganizationInvitation & { organizationName: string }>> {
+    const res = await pool.query(
+      `SELECT 
+         i.id,
+         i.organization_id AS "organizationId",
+         o.name AS "organizationName",
+         i.email,
+         i.role,
+         i.invited_by AS "invitedBy",
+         u.name AS "invitedByName",
+         i.status,
+         i.expires_at AS "expiresAt",
+         i.created_at AS "createdAt"
+       FROM app.organization_invitations i
+       JOIN app.organizations o ON i.organization_id = o.id
+       LEFT JOIN app.users u ON i.invited_by = u.id
+       WHERE lower(i.email) = lower($1)
+         AND i.status = 'pending'
+         AND i.expires_at > NOW()
+       ORDER BY i.created_at DESC`,
+      [email.toLowerCase().trim()]
+    );
+    return res.rows;
+  }
 }
 
 export const invitationRepository = new InvitationRepository();

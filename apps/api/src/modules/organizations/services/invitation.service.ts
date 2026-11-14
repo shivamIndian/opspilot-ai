@@ -220,8 +220,12 @@ export class InvitationService {
       throw new Error('USER_NOT_FOUND');
     }
 
+    // Auto-verify email if not verified yet during invitation acceptance
     if (!user.email_verified_at) {
-      throw new Error('EMAIL_NOT_VERIFIED');
+      await pool.query(
+        'UPDATE app.users SET email_verified_at = CURRENT_TIMESTAMP WHERE id = $1',
+        [user.id]
+      );
     }
 
     const tokenHash = tokenService.hashToken(rawToken);
@@ -303,6 +307,93 @@ export class InvitationService {
     } catch (error) {
       await client.query('ROLLBACK;');
       throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async listPendingForUser(
+    email: string
+  ): Promise<Array<SafeOrganizationInvitation & { organizationName: string }>> {
+    return invitationRepository.findPendingByEmail(email);
+  }
+
+  async acceptInvitationDirect(
+    userId: string,
+    invitationId: string
+  ): Promise<{ organization: SafeOrganization; role: OrganizationRole }> {
+    const user = await userRepository.findById(userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+
+    const invRes = await pool.query(
+      `SELECT * FROM app.organization_invitations WHERE id = $1 AND status = 'pending' LIMIT 1`,
+      [invitationId]
+    );
+    const invitation = invRes.rows[0];
+    if (!invitation) throw new Error('INVITATION_NOT_FOUND_OR_EXPIRED');
+
+    if (invitation.email.toLowerCase() !== user.email.toLowerCase()) {
+      throw new Error('INVITATION_EMAIL_MISMATCH');
+    }
+
+    if (new Date() > new Date(invitation.expires_at)) {
+      throw new Error('INVITATION_EXPIRED');
+    }
+
+    const org = await organizationRepository.findById(invitation.organization_id);
+    if (!org || org.status !== 'active') {
+      throw new Error('ORGANIZATION_INACTIVE_OR_ARCHIVED');
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN;');
+
+      await client.query(
+        `UPDATE app.organization_invitations 
+         SET status = 'accepted', accepted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [invitation.id]
+      );
+
+      await memberRepository.create(
+        {
+          organizationId: invitation.organization_id,
+          userId: user.id,
+          role: invitation.role,
+          status: 'active',
+        },
+        client
+      );
+
+      if (!user.email_verified_at) {
+        await client.query(
+          'UPDATE app.users SET email_verified_at = CURRENT_TIMESTAMP WHERE id = $1',
+          [user.id]
+        );
+      }
+
+      await organizationAuditRepository.logEvent(
+        {
+          organizationId: invitation.organization_id,
+          actorUserId: user.id,
+          action: 'member.joined',
+          targetType: 'user',
+          targetId: user.id,
+          metadata: { role: invitation.role, invitationId: invitation.id, direct: true },
+        },
+        client
+      );
+
+      await client.query('COMMIT;');
+
+      return {
+        organization: organizationRepository.toSafeOrganization(org, invitation.role),
+        role: invitation.role,
+      };
+    } catch (err) {
+      await client.query('ROLLBACK;');
+      throw err;
     } finally {
       client.release();
     }
