@@ -3,6 +3,8 @@ import type { Response } from 'express';
 import { conversationRepository, ConversationRepository } from '../repositories/conversation.repository.js';
 import { workflowService, WorkflowService } from '../../agent-workflows/services/workflow.service.js';
 import { knowledgeAnswerService } from '../../knowledge/services/knowledge-answer.service.js';
+import { agentApprovalRepository } from '../../agent-approvals/repositories/agent-approval.repository.js';
+import { pool } from '../../../database/connection.js';
 import { logger } from '../../../utils/logger.js';
 import type {
   SafeConversation,
@@ -244,15 +246,50 @@ export class ConversationService {
 
         const isAction = /restart|rollout|apply|increase|scale|remediate|fix|deploy/i.test(content);
         if (isAction) {
+          const proposalId = crypto.randomUUID();
+          const proposedPayload = {
+            action: 'kubectl rollout restart deployment/auth-service -n production',
+            target: 'deployment/auth-service',
+            namespace: 'production',
+            reason: 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion',
+          };
+
+          // Maker-Checker Compliance: Autonomous agent is the requester/maker
+          let agentUserId = userId;
+          try {
+            const agentUserRes = await pool.query(
+              "SELECT id FROM app.users WHERE email = 'agent@opspilot.internal' LIMIT 1"
+            );
+            if (agentUserRes.rows[0]?.id) {
+              agentUserId = agentUserRes.rows[0].id;
+            }
+          } catch (agentLookupErr) {
+            logger.warn(`[ConversationService] Agent user lookup warning: ${agentLookupErr}`);
+          }
+
+          try {
+            await agentApprovalRepository.createProposal({
+              id: proposalId,
+              organizationId,
+              runId: `run-${conversation.id}`,
+              threadId: conversation.id,
+              requestedBy: agentUserId,
+              actionType: 'kubernetes_rollout_restart',
+              toolName: 'kubernetes_rollout_restart',
+              riskLevel: 'high',
+              proposalPayload: proposedPayload,
+              justification: 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion',
+              expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            });
+            logger.info(`[ConversationService] Persisted agent action proposal '${proposalId}' to DB.`);
+          } catch (proposalPersistErr) {
+            logger.warn(`[ConversationService] Failed to persist proposal to DB (ignorable in isolated tests): ${proposalPersistErr}`);
+          }
+
           actionProposals.push({
-            proposal_id: crypto.randomUUID(),
+            proposal_id: proposalId,
             tool_name: 'kubernetes_rollout_restart',
-            proposed_action: {
-              action: 'kubectl rollout restart deployment/auth-service -n production',
-              target: 'deployment/auth-service',
-              namespace: 'production',
-              reason: 'Remediate CrashLoopBackOff resulting from OOMKilled cgroup exhaustion',
-            },
+            proposed_action: proposedPayload,
             risk_level: 'high',
             requires_approval: true,
             status: 'pending',

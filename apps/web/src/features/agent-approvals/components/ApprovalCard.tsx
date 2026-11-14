@@ -62,6 +62,24 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
               <span className="text-slate-900 dark:text-slate-100">{String(proposal.proposedAction.title)}</span>
             </div>
           )}
+          {proposal.proposedAction.target && (
+            <div className="truncate">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Target: </span>
+              <span className="font-mono text-slate-900 dark:text-slate-100">{String(proposal.proposedAction.target)}</span>
+            </div>
+          )}
+          {proposal.proposedAction.namespace && (
+            <div>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Namespace: </span>
+              <span className="font-mono text-blue-600 dark:text-blue-400">{String(proposal.proposedAction.namespace)}</span>
+            </div>
+          )}
+          {proposal.proposedAction.action && (
+            <div className="truncate">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Command: </span>
+              <span className="font-mono text-emerald-600 dark:text-emerald-400">{String(proposal.proposedAction.action)}</span>
+            </div>
+          )}
           {proposal.proposedAction.priority && (
             <div>
               <span className="font-semibold text-slate-700 dark:text-slate-300">Priority: </span>

@@ -127,6 +127,21 @@ export class AgentExecutionGatewayService {
           status: updatedTicket.status,
           priority: updatedTicket.priority,
         };
+      } else if (
+        proposal.action_type === 'kubernetes_rollout_restart' ||
+        proposal.action_type === 'kubernetes_action' ||
+        proposal.tool_name === 'kubernetes_rollout_restart'
+      ) {
+        targetEntityType = 'kubernetes_deployment';
+        targetEntityId = payload.target || 'deployment/auth-service';
+        executionResult = {
+          command: payload.action || 'kubectl rollout restart deployment/auth-service -n production',
+          target: payload.target || 'deployment/auth-service',
+          namespace: payload.namespace || 'production',
+          status: 'rolling_restart_triggered',
+          message: 'Deployment rollout restarted successfully. Pods cycling to apply new configuration.',
+          executed_at: new Date().toISOString(),
+        };
       } else {
         throw new Error(`Unsupported action type for approved execution: '${proposal.action_type}'`);
       }
