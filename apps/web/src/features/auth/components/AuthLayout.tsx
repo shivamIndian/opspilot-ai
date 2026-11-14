@@ -47,7 +47,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--surface-primary)] text-[var(--text-primary)] flex flex-col justify-between selection:bg-[var(--brand-primary)] selection:text-white">
+    <div className="min-h-screen w-full bg-[var(--surface-primary)] text-[var(--text-primary)] flex flex-col justify-between selection:bg-[var(--brand-primary)] selection:text-white">
       {/* Top Navbar */}
       <header className="w-full px-6 py-4 flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-primary)]/80 backdrop-blur-md sticky top-0 z-30">
         <Link to="/" className="flex items-center gap-2.5 group">
