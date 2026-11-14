@@ -24,18 +24,28 @@ export const RejectActionDialog: React.FC<RejectActionDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reason.trim()) {
+    const cleanReason = reason.trim();
+    if (!cleanReason) {
       setError('Please provide a mandatory reason for rejecting this proposal.');
+      return;
+    }
+    if (cleanReason.length < 3) {
+      setError('Rejection reason must be at least 3 characters long (e.g., "Policy exceeded", "Not authorized").');
       return;
     }
 
     try {
       setIsSubmitting(true);
       setError(null);
-      await onConfirm(reason.trim());
+      await onConfirm(cleanReason);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to reject action proposal.');
+      const backendMessage =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.error?.details?.[0]?.message ||
+        err?.message ||
+        'Failed to reject action proposal.';
+      setError(backendMessage);
     } finally {
       setIsSubmitting(false);
     }

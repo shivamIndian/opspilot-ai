@@ -40,7 +40,12 @@ export const ApproveActionDialog: React.FC<ApproveActionDialogProps> = ({
       await onConfirm(notes.trim() || undefined);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to approve action proposal.');
+      const backendMessage =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.error?.details?.[0]?.message ||
+        err?.message ||
+        'Failed to approve action proposal.';
+      setError(backendMessage);
     } finally {
       setIsSubmitting(false);
     }
