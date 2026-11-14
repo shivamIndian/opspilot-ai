@@ -26,8 +26,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   const enterpriseFeatures = [
     {
       icon: Workflow,
-      title: 'LangGraph Cognitive Orchestration',
-      description: 'Stateful multi-agent incident triage and multi-step tool workflows.',
+      title: 'Autonomous Workflow Orchestration',
+      description: 'Stateful multi-agent operational triage, policy exceptions, and tool workflows.',
     },
     {
       icon: BrainCircuit,
@@ -41,7 +41,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     },
     {
       icon: Lock,
-      title: 'Cryptographic Multi-Tenancy',
+      title: 'Enterprise Multi-Tenancy',
       description: 'Isolated organization boundary and token-scoped data access controls.',
     },
   ];
@@ -89,14 +89,13 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] border border-[var(--brand-primary)]/20 shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Next-Generation Autonomous IT Operations</span>
+                <span>Next-Gen Enterprise Operations &amp; Knowledge Hub</span>
               </div>
               <h2 className="text-3xl font-extrabold tracking-tight text-[var(--text-primary)] leading-tight">
-                Enterprise AI Incident Resolution & Knowledge Grounding
+                Enterprise Knowledge Grounding &amp; Operational Intelligence
               </h2>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-lg">
-                Empower your engineering and support teams with stateful agentic workflows,
-                policy-gated human approvals, and cryptographic tenant isolation.
+                Empower your workforce and operations teams with instant grounded retrieval across company runbooks and policies, automated triage workflows, and policy-gated human approvals.
               </p>
             </div>
 
