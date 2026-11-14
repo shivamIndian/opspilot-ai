@@ -22,9 +22,11 @@ export const ChatPage: React.FC = () => {
     archiveConversation,
   } = useConversations(organizationId);
 
-  // Set default active conversation when conversations load
+  // Synchronize active conversation with available conversations
   useEffect(() => {
-    if (!activeConversationId && conversations.length > 0) {
+    if (conversations.length === 0) {
+      setActiveConversationId(undefined);
+    } else if (!conversations.some((c) => c.id === activeConversationId)) {
       setActiveConversationId(conversations[0].id);
     }
   }, [conversations, activeConversationId]);
@@ -62,7 +64,8 @@ export const ChatPage: React.FC = () => {
   const handleSendMessage = async (content: string) => {
     try {
       setErrorBanner(null);
-      let targetConvId = activeConversationId || conversations[0]?.id;
+      const isValidActive = conversations.some((c) => c.id === activeConversationId);
+      let targetConvId = isValidActive ? activeConversationId : (conversations[0]?.id || null);
 
       if (!targetConvId) {
         const res = await createConversation({ title: 'New Conversation' });
