@@ -36,7 +36,7 @@ export class AuthController {
 
       res.status(201).json({
         success: true,
-        message: 'Account registered successfully. A verification email has been dispatched.',
+        message: 'Account registered successfully. Please go to login page.',
         data: { user },
       });
     } catch (error) {

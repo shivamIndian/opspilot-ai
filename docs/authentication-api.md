@@ -76,7 +76,7 @@ curl -X POST http://localhost:4000/api/v1/auth/register \
 ```json
 {
   "success": true,
-  "message": "Account registered successfully. A verification email has been dispatched.",
+  "message": "Account registered successfully. has been dispatched.",
   "data": {
     "user": {
       "id": "c1f7b822-482d-4813-8d63-548d88e04e22",
