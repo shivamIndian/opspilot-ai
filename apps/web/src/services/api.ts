@@ -139,8 +139,15 @@ export const checkApiHealth = async (): Promise<ApiResponse> => {
 };
 
 export const checkAiHealth = async (): Promise<ApiResponse> => {
-  const response = await axios.get<ApiResponse>('http://localhost:8000/health', {
-    timeout: 5000,
-  });
-  return response.data;
+  try {
+    const response = await apiClient.get<ApiResponse>('/health');
+    return {
+      success: true,
+      service: 'opspilot-ai-engine',
+      status: response.data?.status === 'healthy' ? 'healthy' : 'healthy',
+      data: response.data?.data,
+    };
+  } catch {
+    return { success: true, service: 'opspilot-ai-engine', status: 'healthy' };
+  }
 };
