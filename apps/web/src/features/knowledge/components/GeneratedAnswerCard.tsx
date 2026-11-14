@@ -9,6 +9,137 @@ interface GeneratedAnswerCardProps {
   onAskFollowUp?: (question: string) => void;
 }
 
+const renderInline = (str: string): React.ReactNode => {
+  const tokens = str.split(/(`[^`]+`|\*\*[^*]+\*\*|\[S\d+\])/g);
+  return tokens.map((token, tIdx) => {
+    if (token.startsWith('`') && token.endsWith('`')) {
+      return (
+        <code
+          key={tIdx}
+          className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[11px] text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-slate-700"
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+    if (token.startsWith('**') && token.endsWith('**')) {
+      return (
+        <strong key={tIdx} className="font-semibold text-slate-900 dark:text-slate-100">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (/^\[S\d+\]$/.test(token)) {
+      return (
+        <span
+          key={tIdx}
+          className="inline-flex items-center rounded bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 ml-1"
+        >
+          {token}
+        </span>
+      );
+    }
+    return token;
+  });
+};
+
+const renderFormattedAnswer = (text: string) => {
+  const parts = text.split(/(```[\s\S]*?```)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('```') && part.endsWith('```')) {
+      const firstLineEnd = part.indexOf('\n');
+      const lang = firstLineEnd !== -1 ? part.slice(3, firstLineEnd).trim() : '';
+      const code = firstLineEnd !== -1 ? part.slice(firstLineEnd + 1, -3) : part.slice(3, -3);
+
+      return (
+        <div
+          key={index}
+          className="my-3 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-sm"
+        >
+          {lang && (
+            <div className="bg-slate-900 px-3.5 py-1 text-[11px] font-mono text-slate-400 border-b border-slate-800 flex justify-between items-center">
+              <span>{lang}</span>
+            </div>
+          )}
+          <pre className="p-3.5 text-xs font-mono text-emerald-400 overflow-x-auto leading-relaxed">
+            <code>{code.trim()}</code>
+          </pre>
+        </div>
+      );
+    }
+
+    const paragraphs = part.split(/\n\n+/);
+    return (
+      <div key={index} className="space-y-2">
+        {paragraphs.map((p, pIdx) => {
+          const trimmed = p.trim();
+          if (!trimmed) return null;
+
+          if (trimmed.startsWith('### ')) {
+            return (
+              <h3
+                key={pIdx}
+                className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-4 mb-1"
+              >
+                {renderInline(trimmed.slice(4))}
+              </h3>
+            );
+          }
+          if (trimmed.startsWith('## ')) {
+            return (
+              <h2
+                key={pIdx}
+                className="text-base font-bold text-slate-900 dark:text-slate-100 mt-4 mb-1"
+              >
+                {renderInline(trimmed.slice(3))}
+              </h2>
+            );
+          }
+
+          const lines = trimmed.split('\n');
+          return (
+            <div key={pIdx} className="space-y-1">
+              {lines.map((line, lIdx) => {
+                const lTrim = line.trim();
+                if (lTrim.startsWith('- ') || lTrim.startsWith('* ')) {
+                  return (
+                    <div
+                      key={lIdx}
+                      className="flex items-start gap-2 text-xs leading-relaxed pl-1 text-slate-700 dark:text-slate-300"
+                    >
+                      <span className="text-blue-500 font-bold">•</span>
+                      <span>{renderInline(lTrim.slice(2))}</span>
+                    </div>
+                  );
+                }
+                if (/^\d+\.\s/.test(lTrim)) {
+                  const num = lTrim.match(/^(\d+\.)\s/)?.[1];
+                  const rest = lTrim.replace(/^\d+\.\s/, '');
+                  return (
+                    <div
+                      key={lIdx}
+                      className="flex items-start gap-2 text-xs leading-relaxed pl-1 text-slate-700 dark:text-slate-300"
+                    >
+                      <span className="text-blue-500 font-semibold">{num}</span>
+                      <span>{renderInline(rest)}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <p key={lIdx} className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                    {renderInline(line)}
+                  </p>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  });
+};
+
 export const GeneratedAnswerCard: React.FC<GeneratedAnswerCardProps> = ({
   response,
   onAskFollowUp,
@@ -79,11 +210,7 @@ export const GeneratedAnswerCard: React.FC<GeneratedAnswerCardProps> = ({
         {/* Answer Content */}
         <div className="space-y-3">
           <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-            {response.answer.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="whitespace-pre-wrap">
-                {paragraph}
-              </p>
-            ))}
+            {renderFormattedAnswer(response.answer)}
           </div>
         </div>
 
